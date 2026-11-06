@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Maquis Express – Jeu de cuisine africaine</title>
+<meta name="description" content="Maquis Express : gère ton restaurant africain, cuisine alloco, garba, kèdjènou, foutou et sers tes clients avant qu'ils ne partent. Jeu gratuit en ligne.">
+<style>
+:root{--bg:#2b1608;--cream:#fff3dc;--orange:#f08a24;--red:#c8372d;--green:#2f8f4e;--yellow:#ffc933;--dark:#3a1d0a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;background:var(--bg);font-family:"Trebuchet MS",system-ui,sans-serif;color:var(--dark);overflow:hidden}
+body{background:
+ repeating-linear-gradient(45deg,#3a1d0a 0 14px,#2b1608 14px 28px)}
+#app{max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;background:var(--cream);position:relative;box-shadow:0 0 30px #000a}
+.screen{display:none;flex:1;flex-direction:column;min-height:0}
+.screen.on{display:flex}
+button{font:inherit;cursor:pointer;border:0}
+.btn{background:var(--orange);color:#fff;font-weight:800;font-size:18px;padding:14px 22px;border-radius:16px;border-bottom:5px solid #b8610f;margin:6px 0;width:100%}
+.btn:active{transform:translateY(3px);border-bottom-width:2px}
+.btn.green{background:var(--green);border-bottom-color:#1e6535}
+.btn.gray{background:#8d7a68;border-bottom-color:#645443}
+.btn[disabled]{opacity:.45}
+/* menu */
+#menu{align-items:center;justify-content:center;text-align:center;padding:20px;background:
+ radial-gradient(circle at 50% 0,#ffd98a,#fff3dc 60%)}
+#menu h1{font-size:40px;margin:0;color:var(--red);text-shadow:2px 2px 0 #ffc933;line-height:1}
+#menu .sub{margin:6px 0 18px;font-weight:700}
+#menu .big{font-size:70px;margin:6px 0}
+.bank{font-weight:800;font-size:18px;margin:8px 0}
+/* game */
+#hud{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--dark);color:#fff;font-weight:800;gap:6px}
+#hud .chip{background:#0004;border-radius:12px;padding:5px 10px;font-size:15px;white-space:nowrap}
+#goalbar{height:8px;background:#0006}
+#goalfill{height:100%;width:0;background:var(--yellow);transition:width .2s}
+#floor{flex:1;min-height:0;display:flex;flex-direction:column;background:linear-gradient(#ffe6b0,#ffd48a)}
+#custs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 8px;flex:1;min-height:0;align-content:start}
+.slot{position:relative;background:#fff8;border:3px dashed #c9a46a;border-radius:16px;min-height:132px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:4px;transition:transform .1s}
+.slot.has{background:#fff;border:3px solid #c9792b}
+.slot.has:active{transform:scale(.96)}
+.av{font-size:38px;line-height:1.1}
+.ord{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;font-size:22px;margin-top:2px}
+.ord span{background:#ffe9bf;border-radius:8px;padding:0 3px}
+.pat{width:90%;height:8px;background:#0002;border-radius:6px;overflow:hidden;margin-top:auto;margin-bottom:3px}
+.pat i{display:block;height:100%;width:100%;background:var(--green)}
+.pop{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-weight:900;font-size:18px;pointer-events:none;animation:rise 1s forwards;z-index:5;text-shadow:0 1px 0 #fff;white-space:nowrap}
+@keyframes rise{to{top:-10%;opacity:0}}
+#stations{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px;background:#7a3f14;border-top:6px solid var(--dark);max-height:44%;overflow:auto}
+.st{position:relative;background:#fff3dc;border-radius:14px;padding:6px 4px 8px;text-align:center;border-bottom:5px solid #c9a46a}
+.st:active{transform:translateY(2px)}
+.st .e{font-size:34px;line-height:1.1}
+.st .n{font-size:11px;font-weight:800;line-height:1.1;min-height:24px;display:flex;align-items:center;justify-content:center}
+.st .bar{height:8px;background:#0003;border-radius:6px;overflow:hidden;margin:3px 6px 0}
+.st .bar i{display:block;height:100%;width:0;background:var(--orange)}
+.st .badge{position:absolute;top:-6px;right:-4px;background:var(--red);color:#fff;border-radius:12px;min-width:24px;height:24px;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+.st.cook{background:#ffe0a0}
+.st.full{opacity:.7}
+/* ads */
+.ad{background:#00000010;display:flex;align-items:center;justify-content:center;color:#7a6a58;font-size:12px;text-align:center;overflow:hidden}
+#adBanner{min-height:50px;max-height:100px}
+#adRect{min-height:120px;margin:8px 0;border-radius:10px}
+/* panels */
+.panel{flex:1;overflow:auto;padding:14px}
+.panel h2{margin:4px 0 10px;color:var(--red)}
+.up{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:10px;margin-bottom:8px;border:2px solid #e8cfa0}
+.up .ic{font-size:30px}
+.up .tx{flex:1;font-size:14px}
+.up .tx b{display:block;font-size:16px}
+.up button{width:auto;padding:8px 12px;font-size:15px;margin:0}
+.lv{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
+.lv button{background:#fff;border:3px solid #e0b36a;border-radius:14px;padding:8px 2px;font-weight:900;font-size:18px;color:var(--dark)}
+.lv button small{display:block;font-size:12px;letter-spacing:1px}
+.lv button[disabled]{opacity:.4}
+#result{align-items:center;justify-content:center;text-align:center;padding:18px}
+#result h2{font-size:30px;margin:4px 0}
+.stars{font-size:44px;letter-spacing:4px}
+.foot{text-align:center;font-size:12px;padding:6px}
+.foot a{color:#7a3f14}
+.dim{position:absolute;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:20;flex-direction:column;padding:30px}
+.dim.on{display:flex}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- MENU -->
+<section id="menu" class="screen on">
+  <div class="big">🍲</div>
+  <h1>MAQUIS<br>EXPRESS</h1>
+  <p class="sub">Cuisine vite, sers bien, deviens le roi du maquis !</p>
+  <div class="bank" id="menuBank">💰 0</div>
+  <div style="width:100%">
+    <button class="btn green" id="btnPlay">▶ Jouer</button>
+    <button class="btn" id="btnShop">🛒 Améliorations</button>
+  </div>
+  <div id="adMenu" class="ad" style="width:100%;margin-top:10px;min-height:60px"></div>
+  <div class="foot"><a href="confidentialite.html">Confidentialité</a></div>
+</section>
+
+<!-- LEVEL SELECT -->
+<section id="levels" class="screen">
+  <div class="panel">
+    <h2>Choisis un niveau</h2>
+    <div class="lv" id="lvGrid"></div>
+    <button class="btn gray" data-go="menu">⬅ Retour</button>
+  </div>
+</section>
+
+<!-- GAME -->
+<section id="game" class="screen">
+  <div id="hud">
+    <span class="chip" id="hLevel">Niv 1</span>
+    <span class="chip" id="hTime">⏱ 75</span>
+    <span class="chip" id="hCoins">💰 0 / 0</span>
+    <button class="chip" id="btnPause" style="color:#fff;border:0">⏸</button>
+  </div>
+  <div id="goalbar"><div id="goalfill"></div></div>
+  <div id="floor">
+    <div id="custs"></div>
+  </div>
+  <div id="stations"></div>
+  <div id="adBanner" class="ad"></div>
+  <div class="dim" id="pauseDim">
+    <h2 style="color:#fff">Pause</h2>
+    <button class="btn green" id="btnResume" style="max-width:260px">Reprendre</button>
+    <button class="btn gray" id="btnQuit" style="max-width:260px">Quitter</button>
+  </div>
+</section>
+
+<!-- RESULT -->
+<section id="result" class="screen">
+  <h2 id="rTitle">Bravo !</h2>
+  <div class="stars" id="rStars">★★★</div>
+  <p id="rText"></p>
+  <div id="adRect" class="ad" style="width:100%"></div>
+  <button class="btn green" id="btnNext">Niveau suivant ▶</button>
+  <button class="btn" id="btnAgain">↻ Rejouer</button>
+  <button class="btn gray" id="btnShop2">🛒 Améliorations</button>
+</section>
+
+<!-- SHOP -->
+<section id="shop" class="screen">
+  <div class="panel">
+    <h2>Améliorations</h2>
+    <div class="bank" id="shopBank"></div>
+    <div id="upList"></div>
+    <button class="btn gray" id="btnShopBack">⬅ Retour</button>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* =========================================================
+   CONFIGURATION GOOGLE ADSENSE
+   1) Remplace ADSENSE_CLIENT par ton identifiant éditeur (ca-pub-xxxxxxxxxxxxxxxx)
+   2) Crée des blocs d'annonces dans AdSense et colle leurs ID ci-dessous
+   Tant que ADSENSE_CLIENT contient "XXXX", des espaces de pub factices s'affichent.
+   ========================================================= */
+const CONFIG={
+  ADSENSE_CLIENT:"ca-pub-XXXXXXXXXXXXXXXX",
+  SLOT_BANNER:"0000000000",   // bandeau en bas du jeu
+  SLOT_RECT:"0000000000",     // rectangle sur l'écran de fin de niveau
+  SLOT_MENU:"0000000000"      // bandeau du menu
+};
+const ADS_ON=!CONFIG.ADSENSE_CLIENT.includes("XXXX");
+if(ADS_ON){
+  const s=document.createElement("script");
+  s.async=true;s.crossOrigin="anonymous";
+  s.src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client="+CONFIG.ADSENSE_CLIENT;
+  document.head.appendChild(s);
+}
+function mountAd(el,slot,label){
+  if(!el)return;
+  if(!ADS_ON){el.textContent="Espace publicitaire ("+label+")";return}
+  el.innerHTML='<ins class="adsbygoogle" style="display:block;width:100%" data-ad-client="'+CONFIG.ADSENSE_CLIENT+'" data-ad-slot="'+slot+'" data-ad-format="auto" data-full-width-responsive="true"></ins>';
+  try{(window.adsbygoogle=window.adsbygoogle||[]).push({})}catch(e){}
+}
+
+/* ========================= DONNÉES ========================= */
+const DISHES=[
+ {id:"alloco",n:"Alloco",e:"🍌",t:3,p:10,l:1},
+ {id:"bissap",n:"Bissap",e:"🍹",t:2,p:8,l:1},
+ {id:"poisson",n:"Poisson braisé",e:"🐟",t:5,p:25,l:2},
+ {id:"attieke",n:"Attiéké",e:"🍚",t:4,p:18,l:3},
+ {id:"garba",n:"Garba",e:"🍛",t:5,p:30,l:4},
+ {id:"kedjenou",n:"Kèdjènou",e:"🍗",t:7,p:45,l:5},
+ {id:"foutou",n:"Foutou sauce graine",e:"🍲",t:7,p:50,l:6},
+ {id:"rizgras",n:"Riz gras",e:"🍅",t:5,p:30,l:7},
+ {id:"mafe",n:"Mafé",e:"🥜",t:6,p:40,l:8}
+];
+const AVATARS=["👩🏾","👨🏾","👵🏾","👴🏾","👦🏾","👧🏾","🧑🏾‍🦱","👩🏾‍🦱","👨🏾‍🦲","🧕🏾"];
+const MAXLEVEL=12;
+const UPS=[
+ {k:"speed",ic:"🔥",n:"Foyer rapide",d:"Cuisson −10 % par niveau",max:5,cost:l=>80*(l+1)},
+ {k:"stock",ic:"🍽️",n:"Grand comptoir",d:"+1 plat en réserve par station",max:3,cost:l=>120*(l+1)},
+ {k:"pat",ic:"😊",n:"Ambiance maquis",d:"Clients +8 % plus patients",max:5,cost:l=>70*(l+1)},
+ {k:"tip",ic:"💸",n:"Bons pourboires",d:"Pourboires +15 %",max:5,cost:l=>90*(l+1)}
+];
+
+/* ========================= SAUVEGARDE ========================= */
+let SAVE={coins:0,unlocked:1,stars:{},up:{speed:0,stock:0,pat:0,tip:0}};
+try{const s=JSON.parse(localStorage.getItem("maquis_save")||"null");if(s)SAVE=Object.assign(SAVE,s)}catch(e){}
+function save(){try{localStorage.setItem("maquis_save",JSON.stringify(SAVE))}catch(e){}}
+
+/* ========================= OUTILS ========================= */
+const $=id=>document.getElementById(id);
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on");
+  if(id==="menu")$("menuBank").textContent="💰 "+SAVE.coins;
+}
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function pop(el,txt,color){
+  const s=document.createElement("div");s.className="pop";s.textContent=txt;if(color)s.style.color=color;
+  el.appendChild(s);setTimeout(()=>s.remove(),1000);
+}
+
+/* ========================= ÉTAT DU JEU ========================= */
+let G=null,timer=null;
+let slotEls=[],stEls={};
+
+function dishesFor(l){return DISHES.filter(d=>d.l<=l)}
+function goalFor(l){return 60+l*55}
+
+function startLevel(l){
+  const avail=dishesFor(l);
+  G={level:l,time:75,coins:0,goal:goalFor(l),spawn:1,combo:0,id:0,paused:false,
+     cust:[null,null,null,null],avail,
+     st:{}};
+  avail.forEach(d=>G.st[d.id]={cook:false,prog:0,stock:0});
+  buildStations();buildSlots();
+  $("hLevel").textContent="Niv "+l;
+  updateHud();
+  show("game");
+  mountAd($("adBanner"),CONFIG.SLOT_BANNER,"bandeau");
+  clearInterval(timer);
+  timer=setInterval(tick,100);
+}
+
+function maxStock(){return 2+SAVE.up.stock}
+function cookTime(d){return d.t*(1-0.1*SAVE.up.speed)}
+
+function buildSlots(){
+  const c=$("custs");c.innerHTML="";slotEls=[];
+  for(let i=0;i<4;i++){
+    const el=document.createElement("div");el.className="slot";
+    el.onclick=()=>serve(i);
+    c.appendChild(el);slotEls.push(el);
+  }
+}
+function buildStations(){
+  const c=$("stations");c.innerHTML="";stEls={};
+  G.avail.forEach(d=>{
+    const el=document.createElement("div");el.className="st";
+    el.innerHTML='<div class="badge" style="display:none">0</div><div class="e">'+d.e+'</div><div class="n">'+d.n+' · '+d.p+'</div><div class="bar"><i></i></div>';
+    el.onclick=()=>startCook(d.id);
+    c.appendChild(el);
+    stEls[d.id]={el,badge:el.querySelector(".badge"),bar:el.querySelector(".bar i")};
+  });
+}
+
+function startCook(id){
+  if(!G||G.paused)return;
+  const s=G.st[id];
+  if(s.cook||s.stock>=maxStock())return;
+  s.cook=true;s.prog=0;
+}
+
+function spawnCustomer(){
+  const free=[];G.cust.forEach((c,i)=>{if(!c)free.push(i)});
+  if(!free.length)return false;
+  const i=rnd(free);
+  let n=1;
+  if(Math.random()<Math.min(.6,.1*G.level))n++;
+  if(G.level>=5&&Math.random()<.2)n++;
+  const order=[];for(let k=0;k<n;k++)order.push(rnd(G.avail).id);
+  const pat=Math.max(12,(21-G.level*.5))*(1+.08*SAVE.up.pat)*(1+(n-1)*.35);
+  G.cust[i]={id:++G.id,av:rnd(AVATARS),order,pat,max:pat,paid:0};
+  return true;
+}
+
+function serve(i){
+  if(!G||G.paused)return;
+  const c=G.cust[i];if(!c)return;
+  let served=0;
+  for(let k=c.order.length-1;k>=0;k--){
+    const s=G.st[c.order[k]];
+    if(s&&s.stock>0){
+      s.stock--;
+      c.paid+=DISHES.find(d=>d.id===c.order[k]).p;
+      c.order.splice(k,1);served++;
+    }
+  }
+  if(!served){pop(slotEls[i],"Pas prêt !","#c8372d");return}
+  if(c.order.length===0){
+    G.combo=Math.min(G.combo+1,10);
+    const frac=c.pat/c.max;
+    const tip=Math.round(c.paid*(frac*0.5+G.combo*0.03)*(1+.15*SAVE.up.tip));
+    const gain=c.paid+tip;
+    G.coins+=gain;
+    pop(slotEls[i],"+"+gain+(tip?" 💸":""),"#2f8f4e");
+    G.cust[i]=null;
+    slotEls[i].dataset.sig="";
+    setTimeout(()=>{if(G&&!G.cust[i]){slotEls[i].className="slot";slotEls[i].innerHTML=""}},0);
+    updateHud();
+  }else{
+    pop(slotEls[i],"Merci !","#2f8f4e");
+  }
+}
+
+function tick(){
+  if(!G||G.paused)return;
+  const dt=.1;
+  G.time-=dt;
+  // stations
+  G.avail.forEach(d=>{
+    const s=G.st[d.id];
+    if(s.cook){
+      s.prog+=dt/cookTime(d);
+      if(s.prog>=1){s.cook=false;s.prog=0;s.stock++}
+    }
+  });
+  // clients
+  G.spawn-=dt;
+  if(G.spawn<=0){
+    if(spawnCustomer())G.spawn=Math.max(2.2,6.5-G.level*.35)+Math.random()*1.5;
+    else G.spawn=1;
+  }
+  G.cust.forEach((c,i)=>{
+    if(!c)return;
+    c.pat-=dt;
+    if(c.pat<=0){
+      pop(slotEls[i],"😠 Parti !","#c8372d");
+      G.combo=0;G.cust[i]=null;
+      const el=slotEls[i];setTimeout(()=>{if(!G.cust[i]){el.className="slot";el.innerHTML="";el.dataset.sig=""}},350);
+    }
+  });
+  render();
+  if(G.time<=0)endLevel();
+}
+
+function render(){
+  updateHud();
+  G.avail.forEach(d=>{
+    const s=G.st[d.id],o=stEls[d.id];
+    o.bar.style.width=(s.cook?s.prog*100:0)+"%";
+    o.el.classList.toggle("cook",s.cook);
+    o.el.classList.toggle("full",s.stock>=maxStock());
+    if(s.stock>0){o.badge.style.display="flex";o.badge.textContent=s.stock}else o.badge.style.display="none";
+  });
+  G.cust.forEach((c,i)=>{
+    const el=slotEls[i];
+    if(!c)return;
+    const sig=c.id+"|"+c.order.join(",");
+    if(el.dataset.sig!==sig){
+      el.dataset.sig=sig;el.className="slot has";
+      el.innerHTML='<div class="av">'+c.av+'</div><div class="ord">'+c.order.map(id=>'<span>'+DISHES.find(d=>d.id===id).e+'</span>').join("")+'</div><div class="pat"><i></i></div>';
+    }
+    const f=Math.max(0,c.pat/c.max);
+    const b=el.querySelector(".pat i");
+    if(b){b.style.width=f*100+"%";b.style.background=f>.5?"#2f8f4e":f>.25?"#f0a024":"#c8372d"}
+  });
+}
+function updateHud(){
+  $("hTime").textContent="⏱ "+Math.max(0,Math.ceil(G.time));
+  $("hCoins").textContent="💰 "+G.coins+" / "+G.goal;
+  $("goalfill").style.width=Math.min(100,G.coins/G.goal*100)+"%";
+}
+
+function endLevel(){
+  clearInterval(timer);
+  const l=G.level,coins=G.coins,goal=G.goal;
+  const stars=coins>=goal*2?3:coins>=goal*1.5?2:coins>=goal?1:0;
+  SAVE.coins+=coins;
+  if(stars>0){
+    SAVE.stars[l]=Math.max(SAVE.stars[l]||0,stars);
+    if(l<MAXLEVEL)SAVE.unlocked=Math.max(SAVE.unlocked,l+1);
+  }
+  save();
+  $("rTitle").textContent=stars?"Bravo, chef ! 🎉":"Raté… 😅";
+  $("rStars").textContent="★".repeat(stars)+"☆".repeat(3-stars);
+  $("rText").innerHTML="Tu as gagné <b>"+coins+"</b> 💰 (objectif : "+goal+")"+(stars?"":"<br>Essaie d'améliorer ton restaurant dans la boutique.");
+  $("btnNext").style.display=(stars&&l<MAXLEVEL)?"block":"none";
+  $("btnNext").onclick=()=>startLevel(l+1);
+  $("btnAgain").onclick=()=>startLevel(l);
+  show("result");
+  mountAd($("adRect"),CONFIG.SLOT_RECT,"rectangle");
+}
+
+/* ========================= MENUS ========================= */
+function buildLevels(){
+  const g=$("lvGrid");g.innerHTML="";
+  for(let l=1;l<=MAXLEVEL;l++){
+    const b=document.createElement("button");
+    const st=SAVE.stars[l]||0;
+    b.innerHTML=l+"<small>"+"★".repeat(st)+"☆".repeat(3-st)+"</small>";
+    b.disabled=l>SAVE.unlocked;
+    b.onclick=()=>startLevel(l);
+    g.appendChild(b);
+  }
+}
+function buildShop(){
+  $("shopBank").textContent="💰 "+SAVE.coins;
+  const c=$("upList");c.innerHTML="";
+  UPS.forEach(u=>{
+    const lv=SAVE.up[u.k],maxed=lv>=u.max,cost=u.cost(lv);
+    const d=document.createElement("div");d.className="up";
+    d.innerHTML='<div class="ic">'+u.ic+'</div><div class="tx"><b>'+u.n+' (niv '+lv+'/'+u.max+')</b>'+u.d+'</div>';
+    const b=document.createElement("button");b.className="btn green";
+    b.textContent=maxed?"MAX":"💰 "+cost;
+    b.disabled=maxed||SAVE.coins<cost;
+    b.onclick=()=>{SAVE.coins-=cost;SAVE.up[u.k]++;save();buildShop()};
+    d.appendChild(b);c.appendChild(d);
+  });
+}
+let shopFrom="menu";
+function openShop(from){shopFrom=from;buildShop();show("shop")}
+
+$("btnPlay").onclick=()=>{buildLevels();show("levels")};
+$("btnShop").onclick=()=>openShop("menu");
+$("btnShop2").onclick=()=>openShop("result");
+$("btnShopBack").onclick=()=>{shopFrom==="result"?(buildLevels(),show("levels")):show("menu")};
+$("btnPause").onclick=()=>{if(G){G.paused=true;$("pauseDim").classList.add("on")}};
+$("btnResume").onclick=()=>{G.paused=false;$("pauseDim").classList.remove("on")};
+$("btnQuit").onclick=()=>{clearInterval(timer);G=null;$("pauseDim").classList.remove("on");buildLevels();show("levels")};
+
+mountAd($("adMenu"),CONFIG.SLOT_MENU,"menu");
+show("menu");
+</script>
+</body>
+</html>
